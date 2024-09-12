@@ -1,13 +1,20 @@
 from flask import Flask, render_template, request, redirect, url_for
 import re
 import json
+import hashlib
 
-import pdb
+# Global set to store hashes of payloads
+submitted_payload_hashes = set()
+
+
+def hash_payload(payload):
+    # Create a hash of the payload
+    return hashlib.sha256(payload.encode()).hexdigest()
 
 app = Flask(__name__)
 
 # Store the user submissions and results in memory
-leaderboard2 = []  # Renamed leaderboard2 to avoid any confusion
+leaderboard2 = []
 
 # Define the requirements to check against all the contexts you provided
 requirements = [
@@ -32,7 +39,6 @@ requirements = [
 ]
 
 
-
 def store_payload(username, payload, result):
     # Store the payload and result in a JSON file
     entry = {
@@ -44,60 +50,54 @@ def store_payload(username, payload, result):
         json.dump(entry, f)
         f.write('\n')
 
-# Function to evaluate the payload based on the defined requirements
+
 def evaluate_payload(username, payload):
+    # Check if the payload has been submitted before
+    payload_hash = hash_payload(payload)
+    if payload_hash in submitted_payload_hashes:
+        print(f"Duplicate payload submission detected for user {username}.")
+        return
+
+    # Add the new payload hash to the set
+    submitted_payload_hashes.add(payload_hash)
+
     # Count the number of characters in the payload
     payload_length = len(payload)
-    
-# Evaluate the payload for each requirement
+
+    # Evaluate the payload for each requirement
     resultsx = []
+    context_bypass_count = 0  
+    alert_count = len(re.findall(r'alert\(\)', payload))
+
     for requirement in requirements:
-        # Check for custom checks
-        if 'custom_check' in requirement:
-            if requirement['custom_check'] == 'check_payload_length':
-                resultsx.append(payload_length <= 1024)  # Pass if the payload is within the limit
-            elif requirement['custom_check'] == 'check_network_requests':
-                # Disable network requests (check for fetch(), XMLHttpRequest(), or <img>)
-                if re.search(r'fetch\(|XMLHttpRequest\(|<img ', payload):
-                    resultsx.append(False)  # Fail if network requests are found
-                else:
-                    resultsx.append(True)  # Pass if no network requests are made
-        # Otherwise, use the pattern matching logic
-        elif re.search(requirement['pattern'], payload):
-            if 'fail_if_matches' in requirement:
-                resultsx.append(False)  # Fail if condition is met
+        if 'pattern' in requirement:
+            if re.search(requirement['pattern'], payload):
+                resultsx.append(True)
+                if "Break out of" in requirement['name']:
+                    context_bypass_count += 1
             else:
-                resultsx.append(True)  # Pass if pattern is found
+                resultsx.append(False)
+        elif 'custom_check' in requirement:
+            if requirement['custom_check'] == 'check_payload_length':
+                resultsx.append(payload_length <= 1024)
+            elif requirement['custom_check'] == 'check_network_requests':
+                if re.search(r'fetch\(|XMLHttpRequest\(|<img ', payload):
+                    resultsx.append(False)
+                else:
+                    resultsx.append(True)
         else:
-            resultsx.append(False)  # Fail if pattern is not found
+            resultsx.append(False)
 
+    xss_valid = context_bypass_count >= 2 and alert_count >= 1
 
-    # Ensure that the length of results matches the number of requirements
+    if not xss_valid:
+        print(f"Payload did not break out of at least 2 contexts, count: {context_bypass_count}")
+        return
+
     assert len(resultsx) == len(requirements), "Mismatch between results and requirements"
     
-
-    # # Ensure that the results list matches the length of the requirements list
-    # if len(resultsx) != len(requirements):
-    #     print(f"Warning: Results length ({len(resultsx)}) does not match requirements length ({len(requirements)}).")
-
-    
-    # # Count how many times alert() is triggered in the payload
-    # alert_matches = re.findall(r'alert\(\)', payload)
-    # if len(alert_matches) >= 2:
-    #     resultsx.append(True)  # Triggered in 2+ contexts
-    # else:
-    #     resultsx.append(False)
-    
-    # # Check payload length
-    # if payload_length > 1024:
-    #     resultsx.append(False)  # Payload exceeds character limit
-    # else:
-    #     resultsx.append(True)
-    
-    # Calculate the number of requirements met
     passed_requirements = resultsx.count(True)
-    
-    # Add the result to the leaderboard
+
     leaderboard2.append({
         'username': username,
         'payload': payload,
@@ -105,11 +105,8 @@ def evaluate_payload(username, payload):
         'passed_requirements': passed_requirements,
         'results': resultsx
     })
-    
-    # Store payload in file for future reference
+
     store_payload(username, payload, resultsx)
-    
-    # Sort the leaderboard by the number of passed requirements, then by payload length
     leaderboard2.sort(key=lambda x: (-x['passed_requirements'], x['characters']))
 
 
@@ -118,25 +115,41 @@ def evaluate_payload(username, payload):
 def index():
     return render_template('form.html')
 
+
 # Route to handle the form submission
 @app.route('/submit', methods=['POST'])
 def submit():
     username = request.form.get('name')
     payload = request.form.get('payload')
-    
+
     # Evaluate the payload and update the leaderboard
     evaluate_payload(username, payload)
-    
+
     # Redirect to the leaderboard page
     return redirect(url_for('leaderboard_page'))
 
 
-
 # Route to display the leaderboard
 @app.route('/leaderboard')
-def leaderboard_page():  # Renamed the function to leaderboard_page to avoid conflict
-    #pdb.set_trace()
-    return render_template('leaderboard.html', leaderboard=leaderboard2, enumerate=enumerate, req = requirements)
+def leaderboard_page():  # Renamed the function to avoid conflict
+    return render_template('leaderboard.html', leaderboard=leaderboard2, enumerate=enumerate, req=requirements)
+
+
+# Additional routes for static pages
+@app.route('/about')
+def about():
+    return render_template('about.html')
+
+
+@app.route('/about2')
+def about2():
+    return render_template('about2.html')
+
+
+@app.route('/where2learn')
+def where2learn():
+    return render_template('where2learn.html')
+
 
 if __name__ == '__main__':
     app.run(debug=True)

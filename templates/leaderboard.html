@@ -3,9 +3,52 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Leaderboard</title>
+    <title>Leaderboard of XSS challenge by @AmineOnline</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <style>
+
+    .tooltip {
+    position: relative;
+    display: inline-block;
+    border-bottom: 1px dotted black;
+    }
+
+    .tooltip .tooltiptext {
+    visibility: hidden;
+    width: 120px;
+    background-color: #555;
+    color: #fff;
+    text-align: center;
+    border-radius: 6px;
+    padding: 5px 0;
+    position: absolute;
+    z-index: 1;
+    bottom: 125%;
+    left: 50%;
+    margin-left: -60px;
+    opacity: 0;
+    transition: opacity 0.3s;
+    }
+
+    .tooltip .tooltiptext::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: #555 transparent transparent transparent;
+    }
+
+    .tooltip:hover .tooltiptext {
+    visibility: visible;
+    opacity: 1;
+    }
+
+
+    </style>
 </head>
 <body>
     <h1>XSS Payload Leaderboard</h1>
@@ -34,9 +77,9 @@
                                     {% for i, result in enumerate(entry.results) %}
                                         {% if i < req|length %}
                                         <td class="{{ 'pass' if result else 'fail' }}">
-                                            <span title="{{ req[i].name }}">
-                                                {{ '✅' if result else '❌' }}
-                                            </span>
+                                            <div class="tooltip" title="{{ req[i].name }}">{{ '✅' if result else '❌' }}
+                                                <span class="tooltiptext">{{ req[i].name }}</span>
+                                            </div>
                                         </td>
                                         {% else %}
                                         <td class="fail">❌ (Unknown Requirement)</td>

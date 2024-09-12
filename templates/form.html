@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>XSS Challenge</title>
+    <title>XSS Challenge by @AmineOnline</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}">
 </head>
@@ -23,7 +23,7 @@
                 Submit with <span id="count">0</span> characters
             </button>
         </p>
-        <button type="submit">Submit</button>
+
     </form>
 
     <h2>Challenge Rules</h2>
@@ -42,6 +42,8 @@
                 <!-- Add more contexts as per your requirement -->
             </ul>
         </li>
+        <li><a href="{{ url_for('about') }}">Read more about the challenge</a></li>
+        <li><a href="{{ url_for('where2learn') }}">Extra Knowledge</a></li>
     </ul>
     <script>
         document.getElementById('payload').addEventListener('input', function() {

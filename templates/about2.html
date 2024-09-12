@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XSS Challenge by @AmineOnline - Detailed Rules and Contexts</title>
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            line-height: 1.6;
+        }
+        code {
+            background-color: #f4f4f4;
+            padding: 2px 5px;
+            border-radius: 4px;
+        }
+        h2 {
+            color: #333;
+        }
+        ul {
+            margin-left: 20px;
+            list-style-type: disc;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+
+        <h1>Detailed Contexts Where Your Payload Must Work</h1>
+        <p>Your payload will be tested in the following HTML contexts. To pass the challenge, your payload must work in at least two of these:</p>
+
+        <h3>&lt;div class="{{payload}}"&gt;&lt;/div&gt; (Attribute Context):</h3>
+        <p>The payload will be injected as the value of a class attribute inside a <code>&lt;div&gt;</code> tag.</p>
+        <p><strong>Goal:</strong> Break out of the <code>class=""</code> attribute and inject your JavaScript. You can achieve this by closing the attribute (") and adding an event like <code>onmouseover</code>.</p>
+        <p><strong>Example:</strong> <code>"&gt;&lt;svg onload=alert(1)&gt;</code> would close the <code>class</code> attribute and insert a new <code>svg</code> element with an <code>onload</code> event.</p>
+
+        <h3>&lt;textarea&gt;{{payload}}&lt;/textarea&gt; (Text Context):</h3>
+        <p>Your payload will be inserted inside a <code>&lt;textarea&gt;</code> tag, which is designed to contain plain text. It is not a natural location for executing scripts, so you must break out of the text and introduce an executable context.</p>
+        <p><strong>Goal:</strong> Break out of the <code>&lt;textarea&gt;</code> tag to insert your script.</p>
+        <p><strong>Example:</strong> <code>&lt;/textarea&gt;&lt;svg onload=alert(1)&gt;</code> will close the <code>&lt;textarea&gt;</code> and inject an executable <code>svg</code> element.</p>
+
+        <h3>&lt;style&gt;{{payload}}&lt;/style&gt; (CSS Context):</h3>
+        <p>The payload will be placed inside a <code>&lt;style&gt;</code> block, which is typically used for CSS rules. Injecting JavaScript in a <code>&lt;style&gt;</code> block is tricky because the browser expects only CSS.</p>
+        <p><strong>Goal:</strong> You must escape the CSS context and execute JavaScript.</p>
+        <p><strong>Example:</strong> <code>&lt;/style&gt;&lt;script&gt;alert(1)&lt;/script&gt;</code> would close the <code>&lt;style&gt;</code> block and introduce a <code>&lt;script&gt;</code> tag.</p>
+
+        <h3>&lt;noscript&gt;{{payload}}&lt;/noscript&gt; (Non-Script Context):</h3>
+        <p>The payload will be placed inside a <code>&lt;noscript&gt;</code> tag, which is only rendered if JavaScript is disabled. You must break out of this tag and execute a script.</p>
+        <p><strong>Goal:</strong> Escape the <code>&lt;noscript&gt;</code> tag and ensure that your script still executes even if JavaScript is enabled.</p>
+        <p><strong>Example:</strong> <code>&lt;/noscript&gt;&lt;script&gt;alert(1)&lt;/script&gt;</code> would close the <code>&lt;noscript&gt;</code> tag and introduce a working <code>&lt;script&gt;</code> tag.</p>
+
+        <h3>&lt;iframe srcdoc="{{payload}}"&gt;&lt;/iframe&gt; (Iframe Context):</h3>
+        <p>The payload will be placed inside an iframe's <code>srcdoc</code> attribute, which defines the HTML content directly within the iframe. This is a commonly overlooked attack vector, and you must find a way to execute your payload inside the iframe.</p>
+        <p><strong>Goal:</strong> Escape the <code>srcdoc</code> attribute and execute JavaScript inside the iframe.</p>
+        <p><strong>Example:</strong> <code>&lt;/iframe&gt;&lt;svg onload=alert(1)&gt;</code> would inject an executable <code>svg</code> element within the iframe.</p>
+
+        <h2>Additional Contexts to Consider</h2>
+        <p>Here are a few more contexts that your payload might encounter. These should be kept in mind as they add to the versatility of your payload:</p>
+
+        <h3>&lt;!--{{payload}}--&gt; (HTML Comment Context):</h3>
+        <p>The payload will be inserted inside an HTML comment, which is normally not rendered by the browser. Your goal is to break out of the comment and execute JavaScript.</p>
+        <p><strong>Example:</strong> <code>--&gt; &lt;script&gt;alert(1)&lt;/script&gt;</code> will close the comment and introduce a <code>&lt;script&gt;</code> tag.</p>
+
+        <h3>&lt;script&gt;{{payload}}&lt;/script&gt; (Script Context):</h3>
+        <p>The payload will be inserted inside a <code>&lt;script&gt;</code> block. This is a powerful context where code can be executed directly. However, escaping the script context can be tricky when certain filters are in place.</p>
+        <p><strong>Example:</strong> <code>";alert(1)//</code> will introduce a JavaScript statement that triggers an alert.</p>
+
+        <h3>&lt;title&gt;{{payload}}&lt;/title&gt; (Title Context):</h3>
+        <p>The payload will be inserted inside the <code>&lt;title&gt;</code> tag, which is used for setting the browser's page title. Injecting JavaScript in this context requires escaping the tag and running code.</p>
+        <p><strong>Goal:</strong> Escape the <code>&lt;title&gt;</code> tag and run JavaScript.</p>
+        <p><strong>Example:</strong> <code>&lt;/title&gt;&lt;svg onload=alert(1)&gt;</code> will close the <code>&lt;title&gt;</code> tag and inject a working script via an <code>svg</code> element.</p>
+
+        <h3>&lt;select&gt;&lt;option&gt;{{payload}}&lt;/option&gt;&lt;/select&gt; (Option Context):</h3>
+        <p>The payload will be placed inside a <code>&lt;select&gt;</code> element as part of an <code>&lt;option&gt;</code> tag. You need to break out of this context to inject your script.</p>
+        <p><strong>Goal:</strong> Escape the <code>&lt;option&gt;</code> context and execute JavaScript.</p>
+        <p><strong>Example:</strong> <code>&lt;/option&gt;&lt;svg onload=alert(1)&gt;</code> will close the option and inject an <code>svg</code> element.</p>
+
+        <h2>General Advice for Crafting Your Payloads</h2>
+        <ul>
+            <li><strong>Attribute Escaping:</strong> In many contexts (like <code>&lt;div class=""&gt;</code>), you need to break out of an attribute to inject executable code. Use characters like <code>"</code> or <code>'</code> to close the attribute and insert your script.</li>
+            <li><strong>Closing Tags:</strong> For contexts like <code>&lt;textarea&gt;</code>, <code>&lt;noscript&gt;</code>, or <code>&lt;style&gt;</code>, your goal is to close the existing tag (e.g., <code>&lt;/textarea&gt;</code>) and then inject JavaScript.</li>
+            <li><strong>HTML5 Features:</strong> Take advantage of HTML5 features like <code>srcdoc</code> and <code>onload</code> for iframes, or use <code>svg</code> elements, which are often overlooked by developers when securing their applications.</li>
+            <li><strong>Think Outside the Box:</strong> Some contexts may not seem exploitable at first glance, but creative use of tags like <code>&lt;svg&gt;</code> and events like <code>onload</code>, <code>onmouseover</code>, or <code>onfocus</code> can help you trigger JavaScript execution.</li>
+        </ul>
+
+        <li><a href="{{ url_for('where2learn') }}">Where to learn more</a></li>
+    </div>
+</body>
+</html>
