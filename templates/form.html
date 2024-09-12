@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XSS Challenge</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}">
+</head>
+<body>
+    <h1>XSS Payload Challenge</h1>
+    <form action="{{ url_for('submit') }}" method="POST">
+        <div>
+            <label for="name">Name:</label>
+            <input type="text" id="name" name="name" required>
+        </div>
+        <div>
+            <label for="payload">Payload:</label>
+            <textarea id="payload" name="payload" rows="4" required></textarea>
+        </div>
+        <p class="text-right">
+            <button id="button" type="submit" class="btn btn-primary">
+                Submit with <span id="count">0</span> characters
+            </button>
+        </p>
+        <button type="submit">Submit</button>
+    </form>
+
+    <h2>Challenge Rules</h2>
+    <ul>
+        <li>Your payload must work in 2+ different contexts and trigger `alert()`.</li>
+        <li>No external libraries or DOM sinks (e.g., `document.write`, `eval`).</li>
+        <li>Payloads longer than 1024 characters will automatically fail.</li>
+        <li>Network access is disabled (e.g., no `fetch()`, `XMLHttpRequest`).</li>
+        <li>Contexts where your payload should work:
+            <ul>
+                <li>&lt;div class="{{payload}}"&gt;&lt;/div&gt;</li>
+                <li>&lt;textarea&gt;{{payload}}&lt;/textarea&gt;</li>
+                <li>&lt;style&gt;{{payload}}&lt;/style&gt;</li>
+                <li>&lt;noscript&gt;{{payload}}&lt;/noscript&gt;</li>
+                <li>&lt;iframe srcdoc="{{payload}}"&gt;&lt;/iframe&gt;</li>
+                <!-- Add more contexts as per your requirement -->
+            </ul>
+        </li>
+    </ul>
+    <script>
+        document.getElementById('payload').addEventListener('input', function() {
+            var count = this.value.length;
+            document.getElementById('count').textContent = count;
+        });
+    </script>
+</body>
+</html>

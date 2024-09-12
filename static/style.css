@@ -1,0 +1,54 @@
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    text-align: center;
+}
+
+td.pass {
+    background-color: #c8e6c9;
+}
+
+td.fail {
+    background-color: #ffcdd2;
+}
+
+pre {
+    white-space: pre-wrap; /* Wrap long payloads */
+    background-color: #f7f7f7;
+    padding: 10px;
+    border: 1px solid #ddd;
+    margin-top: 10px;
+}
+
+.pass {
+    background-color: #c8e6c9;
+}
+
+.fail {
+    background-color: #ffcdd2;
+}
+
+h1 {
+    text-align: center;
+}
+
+button {
+    display: block;
+    margin: 20px auto;
+}
+
+textarea, input {
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+}
+
+form {
+    width: 60%;
+    margin: 20px auto;
+}

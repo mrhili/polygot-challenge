@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leaderboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}">
+</head>
+<body>
+    <h1>XSS Payload Leaderboard</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>Rank</th>
+                <th>User</th>
+                <th>Characters</th>
+                <th>Passed Requirements</th>
+                <th>Details</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for entry in leaderboard %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td>{{ entry.username }}</td>
+                <td>{{ entry.characters }}</td>
+                <td>{{ entry.passed_requirements }} / {{ req|length }}</td>
+                <td>
+                    <table>
+                        <tbody>
+                            <tr>
+                                {% if entry.results %}
+                                    {% for i, result in enumerate(entry.results) %}
+                                        {% if i < req|length %}
+                                        <td class="{{ 'pass' if result else 'fail' }}">
+                                            <span title="{{ req[i].name }}">
+                                                {{ '✅' if result else '❌' }}
+                                            </span>
+                                        </td>
+                                        {% else %}
+                                        <td class="fail">❌ (Unknown Requirement)</td>
+                                        {% endif %}
+                                    {% endfor %}
+                                {% else %}
+                                <td colspan="{{ requirements|length }}">No Results Available</td>
+                                {% endif %}
+                            </tr>
+                        </tbody>
+                    </table>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="5">
+                    <strong>Payload:</strong>
+                    <pre>{{ entry.payload }}</pre>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    
+    <a href="{{ url_for('index') }}">Submit another payload</a>
+</body>
+</html>
